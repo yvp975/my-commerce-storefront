@@ -171,37 +171,39 @@ export default async function decorate(block) {
   let badgeRequestSku = null;
   let badgeState = null;
 
-  events.on('pdp/data', (product) => {
-    if (!product) return;
-    if (badgeState?.sku === product.sku) {
+  events.on('pdp/data', (data) => {
+    if (!data) return;
+    if (badgeState?.sku === data.sku) {
       renderBadges(badgeState.badges, badgeState);
     } else {
-      renderBadges(getProductBadges(product));
+      renderBadges(getProductBadges(data));
     }
-    if (badgeEndpoint && product.sku !== badgeRequestSku) {
-      badgeRequestSku = product.sku;
-      fetchBadgeState(badgeEndpoint, product.sku).then((result) => {
-        if (result && badgeRequestSku === product.sku) {
-          badgeState = { ...result, sku: product.sku };
+    if (badgeEndpoint && data.sku !== badgeRequestSku) {
+      badgeRequestSku = data.sku;
+      fetchBadgeState(badgeEndpoint, data.sku).then((result) => {
+        if (result && badgeRequestSku === data.sku) {
+          badgeState = { ...result, sku: data.sku };
           renderBadges(badgeState.badges, badgeState);
         }
       });
     }
-    if (product.inStock) {
+    if (data.inStock) {
       $stock.textContent = '● In Stock';
       $stock.className = 'product-details__stock stock-badge stock-badge--in-stock';
     } else {
       $stock.textContent = '● Out of Stock';
       $stock.className = 'product-details__stock stock-badge stock-badge--out-of-stock';
     }
-    const value = product.metaTitle;
+    const value = data.metaTitle;
     if (value) {
-      $customAttribute.innerHTML = `
-      <div class="custom-attribute">
-      <dt>Custom Attribute Desc</dt>
-      <dd>${value}</dd>
-      </div>
-      `;
+      const $list = document.createElement('dl');
+      $list.className = 'custom-attribute';
+      const $term = document.createElement('dt');
+      $term.textContent = 'Custom Attribute Desc';
+      const $detail = document.createElement('dd');
+      $detail.textContent = value;
+      $list.append($term, $detail);
+      $customAttribute.replaceChildren($list);
     }
   }, { eager: true });
 

@@ -67,8 +67,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check shards result
+        # Shards are skipped outside the upstream repo; only failed or cancelled shards fail the gate.
         run: |
-          if [ "${{ needs.cypress-aco-groups.result }}" != "success" ]; then
-            echo "One or more test shards failed: ${{ needs.cypress-aco-groups.result }}"
+          result="${{ needs.cypress-aco-groups.result }}"
+          if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+            echo "One or more test shards failed: $result"
             exit 1
           fi
+          echo "Shards result: $result"

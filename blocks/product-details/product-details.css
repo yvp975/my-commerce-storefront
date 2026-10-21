@@ -128,7 +128,7 @@
   white-space: nowrap;
 }
 
-/* Activity 2.1 Task 1 Step 9, adds styles for the title-area tagline.*/
+/* Activity 2.1 Task 1 Step 9, adds styles for the title-area tagline. */
 .pdp-tagline {
   font-size: 1.5rem;
   color: #2d7d2d;
@@ -136,7 +136,7 @@
   margin-top: 0.25rem;
 }
 
-/* Activity 2.1 Task 2 Step 8, adds styles for the stock row and in/out state classes.*/
+/* Activity 2.1 Task 2 Step 8, adds styles for the stock row and in/out state classes. */
 .product-details__stock {
   font-size: 1.5rem;
   font-weight: 600;
@@ -148,7 +148,7 @@
 }
 
 .stock-badge--out-of-stock {
-  color: #cc0000;
+  color: #c00;
 }
 
 /* Activity 2.1 Task 3 Step 13: Append to blocks/product-details/product-details.css */

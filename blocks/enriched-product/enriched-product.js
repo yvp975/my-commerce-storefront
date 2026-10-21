@@ -1,26 +1,24 @@
 import { readBlockConfig } from '../../scripts/aem.js';
 
-const MESH_ENDPOINT =
-    'https://edge-sandbox-graph.adobe.io/api/2175a8c8-04a9-409b-b816-3000388ded1c/graphql';
+const MESH_ENDPOINT = 'https://edge-sandbox-graph.adobe.io/api/2175a8c8-04a9-409b-b816-3000388ded1c/graphql';
 
 function formatMoneyAmount(amount) {
-    if (!amount || typeof amount.value !== 'number') return '';
-    const c = amount.currency;
-    const code =
-        typeof c === 'string'
-            ? c
-            : c?.code ?? c?.label ?? '';
-    return `${code ? `${code} ` : ''}${amount.value.toFixed(2)}`.trim();
+  if (!amount || typeof amount.value !== 'number') return '';
+  const c = amount.currency;
+  const code = typeof c === 'string'
+    ? c
+    : c?.code ?? c?.label ?? '';
+  return `${code ? `${code} ` : ''}${amount.value.toFixed(2)}`.trim();
 }
 
 function priceAmountFromCatalogProduct(product) {
-    const simple = product?.price?.final?.amount;
-    if (simple) return simple;
-    return product?.priceRange?.minimum?.final?.amount ?? null;
+  const simple = product?.price?.final?.amount;
+  if (simple) return simple;
+  return product?.priceRange?.minimum?.final?.amount ?? null;
 }
 
 async function fetchEnrichedProduct(sku) {
-    const query = `
+  const query = `
     query GetEnrichedProduct($sku: String!) {
       products(skus: [$sku]) {
         sku
@@ -63,67 +61,67 @@ async function fetchEnrichedProduct(sku) {
     }
   `;
 
-    const response = await fetch(MESH_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, variables: { sku } }),
-    });
+  const response = await fetch(MESH_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables: { sku } }),
+  });
 
-    if (!response.ok) {
-        throw new Error(`Mesh request failed: ${response.status}`);
-    }
+  if (!response.ok) {
+    throw new Error(`Mesh request failed: ${response.status}`);
+  }
 
-    const payload = await response.json();
-    if (payload.errors?.length) {
-        const msg = payload.errors.map((e) => e.message).join('; ');
-        console.error('Mesh GraphQL errors:', payload.errors);
-        throw new Error(msg);
-    }
-    return payload;
+  const payload = await response.json();
+  if (payload.errors?.length) {
+    const msg = payload.errors.map((e) => e.message).join('; ');
+    console.error('Mesh GraphQL errors:', payload.errors);
+    throw new Error(msg);
+  }
+  return payload;
 }
 
 function renderSustainabilityBadge(score) {
-    let label;
-    let cssClass;
-    if (score >= 80) {
-        label = 'Excellent';
-        cssClass = 'badge--excellent';
-    } else if (score >= 60) {
-        label = 'Good';
-        cssClass = 'badge--good';
-    } else {
-        label = 'Fair';
-        cssClass = 'badge--fair';
-    }
-    return `<span class="sustainability-badge ${cssClass}">${label} (${score}/100)</span>`;
+  let label;
+  let cssClass;
+  if (score >= 80) {
+    label = 'Excellent';
+    cssClass = 'badge--excellent';
+  } else if (score >= 60) {
+    label = 'Good';
+    cssClass = 'badge--good';
+  } else {
+    label = 'Fair';
+    cssClass = 'badge--fair';
+  }
+  return `<span class="sustainability-badge ${cssClass}">${label} (${score}/100)</span>`;
 }
 
 export default async function decorate(block) {
-    const { sku } = readBlockConfig(block);
+  const { sku } = readBlockConfig(block);
 
-    if (!sku) {
-        block.innerHTML = '<p>No SKU configured for this block.</p>';
-        return;
+  if (!sku) {
+    block.innerHTML = '<p>No SKU configured for this block.</p>';
+    return;
+  }
+
+  block.innerHTML = '<p>Loading product details...</p>';
+
+  try {
+    const { data } = await fetchEnrichedProduct(sku);
+
+    const catalogRows = data?.products;
+    const product = Array.isArray(catalogRows) ? catalogRows[0] : null;
+    const enrichment = data?.Enrichment_getProductEnrichment;
+
+    if (!product) {
+      block.innerHTML = '<p>Product not found.</p>';
+      return;
     }
 
-    block.innerHTML = '<p>Loading product details...</p>';
+    const priceLabel = formatMoneyAmount(priceAmountFromCatalogProduct(product));
+    const firstImage = product.images?.[0];
 
-    try {
-        const { data } = await fetchEnrichedProduct(sku);
-
-        const catalogRows = data?.products;
-        const product = Array.isArray(catalogRows) ? catalogRows[0] : null;
-        const enrichment = data?.Enrichment_getProductEnrichment;
-
-        if (!product) {
-            block.innerHTML = '<p>Product not found.</p>';
-            return;
-        }
-
-        const priceLabel = formatMoneyAmount(priceAmountFromCatalogProduct(product));
-        const firstImage = product.images?.[0];
-
-        block.innerHTML = `
+    block.innerHTML = `
       <div class="enriched-product__card">
         ${firstImage ? `<img src="${firstImage.url}" alt="${firstImage.label || product.name}" loading="lazy" width="400" height="400" />` : ''}
         <div class="enriched-product__info">
@@ -144,8 +142,8 @@ export default async function decorate(block) {
         </div>
       </div>
     `;
-    } catch (error) {
-        console.error('Enriched product block failed:', error);
-        block.innerHTML = '<p>Unable to load product data.</p>';
-    }
+  } catch (error) {
+    console.error('Enriched product block failed:', error);
+    block.innerHTML = '<p>Unable to load product data.</p>';
+  }
 }
