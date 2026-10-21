@@ -27,9 +27,11 @@ export function getProductBadges({
 /**
  * Creates an accessible badge list; returns null when there is nothing to show.
  * @param {string[]} badges
+ * @param {{ lowStockLabel?: string }} [options] Admin-configured low-stock text,
+ *   styled as low stock.
  * @returns {HTMLUListElement|null}
  */
-export function createProductBadges(badges) {
+export function createProductBadges(badges, { lowStockLabel = LOW_STOCK_BADGE } = {}) {
   if (!badges.length) return null;
 
   const list = document.createElement('ul');
@@ -38,7 +40,9 @@ export function createProductBadges(badges) {
 
   badges.forEach((badge) => {
     const item = document.createElement('li');
-    const modifier = badge.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const modifier = badge === lowStockLabel
+      ? 'low-stock'
+      : badge.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     item.className = `product-badge product-badge--${modifier}`;
     item.textContent = badge;
     list.append(item);
@@ -52,7 +56,8 @@ export function createProductBadges(badges) {
  * @param {string} endpoint
  * @param {string} sku
  * @returns {Promise<{ badges: string[], source: string, eventId: string|null,
- *   correlationId: string|null }|null>} null when unavailable, so callers keep their fallback.
+ *   correlationId: string|null, lowStockLabel?: string }|null>} null when unavailable,
+ *   so callers keep their fallback.
  */
 export async function fetchBadgeState(endpoint, sku) {
   if (!endpoint || !sku) return null;
@@ -61,9 +66,10 @@ export async function fetchBadgeState(endpoint, sku) {
     url.searchParams.set('sku', sku);
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) return null;
-    const item = (await response.json())?.items?.[0];
+    const data = await response.json();
+    const item = data?.items?.[0];
     if (!item?.found || !Array.isArray(item.badges)) return null;
-    return item;
+    return { ...item, lowStockLabel: data.rules?.lowStockLabel };
   } catch (error) {
     console.warn('Badge service unavailable; using catalog badges.', error);
     return null;

@@ -157,7 +157,7 @@ export default async function decorate(block) {
   block.replaceChildren(fragment);
 
   const renderBadges = (badges, trace = {}) => {
-    const $badgeList = createProductBadges(badges);
+    const $badgeList = createProductBadges(badges, { lowStockLabel: trace.lowStockLabel });
     if ($badgeList) {
       $badgeList.dataset.badgeSource = trace.source ?? 'catalog';
       if (trace.eventId) $badgeList.dataset.eventId = trace.eventId;
