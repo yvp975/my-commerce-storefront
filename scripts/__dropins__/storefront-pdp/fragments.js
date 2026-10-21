@@ -97,6 +97,7 @@ fragment PRODUCT_FRAGMENT on ProductView {
   metaTitle
   description
   inStock
+  lowStock
   addToCartAllowed
   url
   urlKey
