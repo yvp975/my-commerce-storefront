@@ -21,6 +21,7 @@ overrideGQLOperations([
     operations: [
       `fragment PRODUCT_FRAGMENT on ProductView {
       metaTitle
+      lowStock
     }`,
     ],
   },

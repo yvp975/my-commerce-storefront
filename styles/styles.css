@@ -629,6 +629,47 @@ body.columns main > .section:empty {
   border: unset;
 }
 
+.product-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xxsmall);
+  margin: 0 0 var(--spacing-xsmall);
+  padding: 0;
+  list-style: none;
+}
+
+.product-badge {
+  border-radius: 999px;
+  padding: 0.2em 0.75em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background-color: var(--color-informational-200);
+  color: var(--color-brand-700);
+}
+
+.product-badge--new {
+  background-color: var(--color-positive-200);
+  color: #2f5f2a;
+}
+
+.product-badge--best-seller {
+  background-color: var(--color-warning-200);
+  color: #8a4d12;
+}
+
+.product-badge--limited-offer {
+  background-color: var(--color-alert-200);
+  color: #a32b2b;
+}
+
+.product-badge--low-stock {
+  background-color: #fff4d6;
+  color: #7a4b00;
+}
+
 @media (min-width: 900px) {
   body.columns main {
     flex-flow: row wrap;

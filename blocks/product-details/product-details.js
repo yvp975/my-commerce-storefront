@@ -32,6 +32,7 @@ import {
   fetchPlaceholders,
   getProductLink,
 } from '../../scripts/commerce.js';
+import { createProductBadges, getProductBadges } from '../../scripts/product-badges.js';
 
 // Initializers
 import { IMAGES_SIZES } from '../../scripts/initializers/pdp.js';
@@ -106,6 +107,7 @@ export default async function decorate(block) {
         <div class="product-details__gallery"></div>
       </div>
       <div class="product-details__right-column">
+        <div class="product-details__badges"></div>
         <div class="product-details__header"></div>
         <div class="product-details__tagline pdp-tagline" aria-label="Promotional offer"></div>
         <div class="product-details__stock" role="status" aria-live="polite"></div>
@@ -148,12 +150,15 @@ export default async function decorate(block) {
   const $attributes = fragment.querySelector('.product-details__attributes');
   const $tagline = fragment.querySelector('.product-details__tagline');
   const $stock = fragment.querySelector('.product-details__stock');
+  const $badges = fragment.querySelector('.product-details__badges');
   const $customAttribute = fragment.querySelector('.product-details__custom-attribute');
 
   block.replaceChildren(fragment);
 
   events.on('pdp/data', (product) => {
     if (!product) return;
+    const $badgeList = createProductBadges(getProductBadges(product));
+    $badges.replaceChildren(...($badgeList ? [$badgeList] : []));
     if (product.inStock) {
       $stock.textContent = '● In Stock';
       $stock.className = 'product-details__stock stock-badge stock-badge--in-stock';
