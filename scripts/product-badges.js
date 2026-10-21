@@ -46,3 +46,26 @@ export function createProductBadges(badges) {
 
   return list;
 }
+
+/**
+ * Fetches event-persisted badge state from the get-product-badges Runtime action.
+ * @param {string} endpoint
+ * @param {string} sku
+ * @returns {Promise<{ badges: string[], source: string, eventId: string|null,
+ *   correlationId: string|null }|null>} null when unavailable, so callers keep their fallback.
+ */
+export async function fetchBadgeState(endpoint, sku) {
+  if (!endpoint || !sku) return null;
+  try {
+    const url = new URL(endpoint);
+    url.searchParams.set('sku', sku);
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) return null;
+    const item = (await response.json())?.items?.[0];
+    if (!item?.found || !Array.isArray(item.badges)) return null;
+    return item;
+  } catch (error) {
+    console.warn('Badge service unavailable; using catalog badges.', error);
+    return null;
+  }
+}

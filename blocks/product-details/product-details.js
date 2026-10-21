@@ -6,6 +6,7 @@ import {
 } from '@dropins/tools/components.js';
 import { h } from '@dropins/tools/preact.js';
 import { events } from '@dropins/tools/event-bus.js';
+import { getConfigValue } from '@dropins/tools/lib/aem/configs.js';
 import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
 import * as pdpApi from '@dropins/storefront-pdp/api.js';
 import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
@@ -32,7 +33,7 @@ import {
   fetchPlaceholders,
   getProductLink,
 } from '../../scripts/commerce.js';
-import { createProductBadges, getProductBadges } from '../../scripts/product-badges.js';
+import { createProductBadges, fetchBadgeState, getProductBadges } from '../../scripts/product-badges.js';
 
 // Initializers
 import { IMAGES_SIZES } from '../../scripts/initializers/pdp.js';
@@ -155,10 +156,37 @@ export default async function decorate(block) {
 
   block.replaceChildren(fragment);
 
+  const renderBadges = (badges, trace = {}) => {
+    const $badgeList = createProductBadges(badges);
+    if ($badgeList) {
+      $badgeList.dataset.badgeSource = trace.source ?? 'catalog';
+      if (trace.eventId) $badgeList.dataset.eventId = trace.eventId;
+      if (trace.correlationId) $badgeList.dataset.correlationId = trace.correlationId;
+    }
+    $badges.replaceChildren(...($badgeList ? [$badgeList] : []));
+  };
+
+  // Event-persisted state reflects Admin saves before Catalog Service syncs.
+  const badgeEndpoint = getConfigValue('product-badges-endpoint');
+  let badgeRequestSku = null;
+  let badgeState = null;
+
   events.on('pdp/data', (product) => {
     if (!product) return;
-    const $badgeList = createProductBadges(getProductBadges(product));
-    $badges.replaceChildren(...($badgeList ? [$badgeList] : []));
+    if (badgeState?.sku === product.sku) {
+      renderBadges(badgeState.badges, badgeState);
+    } else {
+      renderBadges(getProductBadges(product));
+    }
+    if (badgeEndpoint && product.sku !== badgeRequestSku) {
+      badgeRequestSku = product.sku;
+      fetchBadgeState(badgeEndpoint, product.sku).then((result) => {
+        if (result && badgeRequestSku === product.sku) {
+          badgeState = { ...result, sku: product.sku };
+          renderBadges(badgeState.badges, badgeState);
+        }
+      });
+    }
     if (product.inStock) {
       $stock.textContent = '● In Stock';
       $stock.className = 'product-details__stock stock-badge stock-badge--in-stock';

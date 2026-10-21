@@ -16,6 +16,7 @@
       "commerce-companies-enabled": false,
       "commerce-assets-enabled": false,
       "adobe-commerce-optimizer": false,
+      "product-badges-endpoint": "https://3967933-612khakirat-stage.adobeioruntime.net/api/v1/web/course-labs/get-product-badges",
       "analytics": {
         "base-currency-code": "USD",
         "environment": "Testing",
