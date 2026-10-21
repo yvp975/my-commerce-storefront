@@ -13,6 +13,7 @@ import {
   preloadFile,
 } from '../commerce.js';
 import { getMetadata } from '../aem.js';
+import { PROMO_BADGE_ATTRIBUTE } from '../product-badges.js';
 
 export const IMAGES_SIZES = {
   width: 960,
@@ -102,7 +103,12 @@ await initializeDropin(async () => {
   const models = {
     ProductDetails: {
       initialData: { ...product },
-      transformer: (data) => ({ lowStock: data?.lowStock === true }),
+      // Raw attributes: the drop-in drops any attribute without the visible_in_pdp role.
+      transformer: (data) => ({
+        lowStock: data?.lowStock === true,
+        promoBadges: data?.attributes
+          ?.find(({ name }) => name === PROMO_BADGE_ATTRIBUTE)?.value ?? null,
+      }),
     },
   };
 

@@ -5,18 +5,18 @@ export const LOW_STOCK_BADGE = 'Low Stock';
 /**
  * Reads merchandiser badges from Catalog Service attributes, plus Low Stock from inventory.
  * @param {{ attributes?: Array<{ id?: string, name?: string, value?: unknown }>,
- *   inStock?: boolean, lowStock?: boolean }} product
+ *   promoBadges?: unknown, inStock?: boolean, lowStock?: boolean }} product
  * @returns {string[]}
  */
-export function getProductBadges({ attributes, inStock, lowStock } = {}) {
-  const attribute = attributes?.find(
+export function getProductBadges({
+  attributes, promoBadges, inStock, lowStock,
+} = {}) {
+  const promoValue = promoBadges ?? attributes?.find(
     ({ id, name }) => (name ?? id) === PROMO_BADGE_ATTRIBUTE,
-  );
+  )?.value;
   let values = [];
-  if (attribute?.value) {
-    values = Array.isArray(attribute.value)
-      ? attribute.value
-      : String(attribute.value).split(',');
+  if (promoValue) {
+    values = Array.isArray(promoValue) ? promoValue : String(promoValue).split(',');
   }
 
   const badges = new Set(values.map((value) => String(value).trim()).filter(Boolean));
